@@ -351,8 +351,23 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					}
 	
 				}
+				//ID del pedido en la variable $order_id
+				$order_id = $order->get_id();
+				// aqui se obtiene el valor del input del chatkout
+				$confirm_phone = get_post_meta($order_id, 'confirm_phone', true);
 
-				
+				// Luego, envía el array $data a Google Sheets como ya lo estás haciendo
+				$this->google_client->append_to_sheet($sheet_name, $data);
+
+				$sheet_name = 'pedidos';
+				$cell_range = 'AH'; // Esto podría ser diferente dependiendo de cómo esté estructurado tu código
+
+				// Obtener el valor del input "confirm_phone"
+				$confirm_phone = get_post_meta($order_id, 'confirm_phone', true);
+
+				// Enviar el valor a Google Sheets
+				$this->google_client->append_to_sheet($sheet_name . '!' . $cell_range, $confirm_phone);
+
 				$data = array(
 					$order_data['date_created']->date('d-M-y'),
 					$order_data['date_created']->date('H:i'),
@@ -381,6 +396,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$order->get_shipping_state(),
 					(string)$order->get_shipping_postcode(),
 					$cobro,
+					//aqui se agrega el valor del input al array de datos
+					$data['confirm_phone'] = $confirm_phone;
 				);
 				
 				if(!empty($settings['move_target_col'])){
