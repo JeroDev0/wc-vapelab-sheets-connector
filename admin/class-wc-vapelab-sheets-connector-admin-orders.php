@@ -1,16 +1,12 @@
 <?php
 
-
 class WC_Vapelab_Sheets_Connector_Admin_Orders
 {
-
 	private $id;
 
 	private $settings;
 
 	private $logger;
-
-	private $google_client;
 
 	public function __construct($google_snippets)
     {
@@ -20,9 +16,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 		$this->service = $this->google_snippets->getService();
 
 		$this->init_settings();
-
-		$this->google_client = new GoogleClient();
-		
     }
 
 	public function init_settings(){
@@ -51,7 +44,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 		curl_close($curl);
 		exit();
 		
-
 		$this->fixMetadata();
 		//exit();
 		*/
@@ -61,13 +53,11 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 		$spreadsheet_id = $settings['spreadsheet_id'];
 		$main_sheet_id = $settings['main_sheet_id'];
 		
-
 		$orders = json_decode(file_get_contents(WC_VAPELAB_SHEETS_CONNECTOR_PATH."/orders.json"),true);
 		$orders=array_reverse($orders);
 		$data_filters = [];
 		foreach ($orders as $order) {
 
-		
 		$date_created = new \DateTime($order['date_created']);
 
 		$country_code_phone = "";
@@ -96,6 +86,13 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			}
 		}
 
+// bucle foreach que itera sobre los metadatos de los pedidos
+		$confirm_phone = "";
+		foreach($order['meta_data'] as $meta_data){
+			if($meta_data['key'] == "confirm_phone"){
+				$confirm_phone = $meta_data['value'];
+			}
+		}
 		$shipping_method_id = "";
 		$shipping_method_title = "";
 		if(isset($order['shipping_lines']) && count($order['shipping_lines']) > 0){
@@ -157,11 +154,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 				}elseif($carrier_name == 'fedex'){
 					$link_etiqueta = "https://www.fedex.com/fedextrack/?trknbr=".$shipment['carrier_shipment_number'];
 				}
-
 			}
-
 		}
-
 
 		$order_fees = 0;
 
@@ -173,7 +167,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			// OR $order_fees += $fee->get_total();
 		}
 
-
 		$order_subtotal = 0;
 
 		// Get fees
@@ -183,9 +176,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 
 			// OR $order_fees += $fee->get_total();
 		}
-
-		
-
 
 		$data = array(
 			$date_created->format('d-M-y'),
@@ -213,8 +203,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			$order['shipping']['city'],
 			$order['shipping']['state'],
 			"'".$order['shipping']['postcode'],
-			$cobro
-
+			$cobro,
+			$confirm_phone
 		);
 		
 		$request = array(
@@ -236,7 +226,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			
 		);
 		
-
 		$res =$this->service->spreadsheets_values->batchUpdateByDataFilter(
 			$spreadsheet_id,
 			new Google_Service_Sheets_BatchUpdateValuesByDataFilterRequest($request)
@@ -266,7 +255,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			//4152313459558511
 			$query = new WP_Query($query_args);
 
-
 			echo '<pre>';var_dump($query);echo '</pre>';exit();
 
 		$request = array(
@@ -287,10 +275,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 		);
 		echo '<pre>';var_dump($response);echo '</pre>';exit();
 
-		
 	}
-
-
 	public function insertOrderSheet($order_id)
 	{
 
@@ -301,14 +286,11 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			$order_data = $order->get_data();
 
 			$customer = $order->get_user();
-			$this->google_client->append_to_sheet($order_data);
 			
 			if ($customer) {
 
 				$settings = $this->settings;
 
-				
-				
 				$customer_data = $customer->to_array();
 
 				$order_fees = 0;
@@ -356,20 +338,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					}
 	
 				}
-				//ID del pedido en la variable $order_id
-				$order_id = $order->get_id();
-				// aqui se obtiene el valor del input del chatkout
-				$confirm_phone = get_post_meta( $order->get_id(), 'confirm_phone', true );
-
-				// Luego, envía el array $data a Google Sheets como ya lo estás haciendo
-				$this->google_client->append_to_sheet($sheet_name, $data);
-
-				$sheet_name = 'pedidos';
-				$cell_range = 'AH'; // Esto podría ser diferente dependiendo de cómo esté estructurado tu código
-
-				// Enviar el valor a Google Sheets
-				$this->google_client->append_to_sheet($sheet_name . '!' . $cell_range, $confirm_phone);
-
+				
 				$data = array(
 					$order_data['date_created']->date('d-M-y'),
 					$order_data['date_created']->date('H:i'),
@@ -398,8 +367,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$order->get_shipping_state(),
 					(string)$order->get_shipping_postcode(),
 					$cobro,
-					//aqui se agrega el valor del input al array de datos
-					$data['confirm_phone'] = $confirm_phone
+					$confirm_phone
 				);
 				
 				if(!empty($settings['move_target_col'])){
@@ -469,8 +437,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 
 					]);
 
-
-
 					$body = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
 						'requests' => $createDeveloperMetadataRequests
 
@@ -479,8 +445,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$this->service->spreadsheets->batchUpdate($spreadsheet_id, $body);
 				}
 				*/
-
-
 			}
 
 		} catch (Google\Service\Exception $e) {
@@ -563,8 +527,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 				]
 			]));
 
-			
-			
 			if (!is_null($searchResponse->matchedDeveloperMetadata)) {
 
 				$customer_data = $customer->to_array();
@@ -610,8 +572,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 				if ($order->meta_exists('cobro')) {
 					$cobro = $order->get_meta('cobro');
 				}
-
-
 
 				$data = array(
 					$order_data['date_created']->date('d-M-y'),
@@ -798,7 +758,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 
 			$batchUpdateResponse =$this->service->spreadsheets->batchUpdate($spreadsheet_id, $batchUpdateRequest);
 
-
 			return $spreadsheet_id;
 		} catch (Google\Service\Exception $e) {
 
@@ -827,7 +786,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 
 		$responseGetSheet =$this->service->spreadsheets->get($spreadsheet_id);
 
-
 		foreach ($responseGetSheet->getSheets() as $sheet) {
 
 			$sheet_properties = $sheet->getProperties();
@@ -836,10 +794,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 				
 				$main_sheet = $sheet;
 				break;
-				
 			}
-
-
 		}
 		
 		if(isset($main_sheet) ){
@@ -929,14 +884,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 				$responseMeta =$this->service->spreadsheets->batchUpdate($spreadsheet_id, new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
 					'requests' => $createDeveloperMetadataRequests
 				]));
-				
 			}
-			
-			
-		
 		}
-		
-		
 	}
 
 	public function moveOrdersToHistory(){
@@ -1020,7 +969,6 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			
 			if(!empty($move_arr)){
 
-				
 				$responseClear =$this->service->spreadsheets_values->batchClearByDataFilter($spreadsheet_id,new Google_Service_Sheets_BatchClearValuesByDataFilterRequest([
 					"dataFilters" => [
 						[
@@ -1064,25 +1012,14 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$n[$ag_idx] = "";
 					$n[$aj_idx] = "";
 				
-					
 					return $n;
 
 				},$update_arr);
 				
-
-
 				$updateResponse = $this->google_snippets->updateValues($spreadsheet_id, $main_sheet->getProperties()->getTitle()."!A".$startIndex.":".$this->stringFromColumnIndex($endColumnIndex).$endRowIndex, "USER_ENTERED", $update_arr);
 	
 				$moveResponse =$this->service->spreadsheets_values->append($spreadsheet_id, $move_sheet->getProperties()->getTitle()."!A".$startIndex, $body, $params);
-				
 			}
-			
-			
 		}
-
-
-
 	}
-
-
 }
