@@ -286,6 +286,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 			$order_data = $order->get_data();
 
 			$customer = $order->get_user();
+
+			$confirm_phone = $order->get_meta('confirm_phone');
 			
 			if ($customer) {
 
@@ -600,7 +602,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$order->get_shipping_city(),
 					$order->get_shipping_state(),
 					"'" . $order->get_shipping_postcode(),
-					$cobro
+					$cobro,
 				);
 
 				$spreadsheet_id = $settings['spreadsheet_id'];
