@@ -469,6 +469,8 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 
 		$customer = $order->get_user();
 
+		$confirm_phone = $order->get_meta('confirm_phone');
+
 		if ($customer) {
 
 			$settings = $this->settings;
@@ -603,6 +605,7 @@ class WC_Vapelab_Sheets_Connector_Admin_Orders
 					$order->get_shipping_state(),
 					"'" . $order->get_shipping_postcode(),
 					$cobro,
+					$confirm_phone
 				);
 
 				$spreadsheet_id = $settings['spreadsheet_id'];

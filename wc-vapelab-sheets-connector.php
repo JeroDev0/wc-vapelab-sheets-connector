@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       WooCommerce Sheets Connector for VapeLab 
  * Description:       Syncs data between your online store and Google Sheets. It automates the transfer of information, ensuring real-time updates for orders, product details, and inventory. With customizable mapping and error handling, managing your store's data has never been easier. Stay organized and save time with our efficient synchronization solution.
- * Version:           3.1.0
+ * Version:           3.1.1
  * Author:            VapeLab
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
